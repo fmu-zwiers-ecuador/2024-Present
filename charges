@@ -4,6 +4,13 @@ import busio
 from adafruit_ina219 import INA219
 from pijuice import PiJuice
 
+# ANSI escape codes for colors
+BLUE = "\033[94m"
+CYAN = "\033[96m"
+PURPLE = "\033[95m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
+
 # Initialize I2C bus
 i2c = busio.I2C(board.SCL, board.SDA)
 
@@ -23,14 +30,14 @@ def get_solar_input():
     io_current = pijuice.status.GetIoCurrent()
 
     if io_voltage["error"] or io_current["error"]:
-        print("Error reading solar input!")
+        print(f"{BOLD}{PURPLE}Error reading solar input!{RESET}")
         return None, None
     
     solar_voltage = io_voltage["data"] / 1000.0  # Convert mV to V
     solar_current = io_current["data"]  # Already in mA
 
-    print(f"Solar Voltage (Input Voltage): {solar_voltage} V")
-    print(f"Solar Current (Input Current): {solar_current} mA")
+    print(f"{BLUE}Solar Voltage (Input Voltage): {solar_voltage} V{RESET}")
+    print(f"{CYAN}Solar Current (Input Current): {solar_current} mA{RESET}")
 
     return solar_voltage, solar_current
 
@@ -40,13 +47,13 @@ def get_battery_charge():
     battery_voltage = pijuice.status.GetBatteryVoltage()
 
     if battery_status["error"] or battery_voltage["error"]:
-        print("Error reading battery status!")
+        print(f"{BOLD}{PURPLE}Error reading battery status!{RESET}")
         return None, None
     
     battery_percentage = battery_status["data"]
     battery_voltage = battery_voltage["data"] / 1000.0  # Convert mV to V
-    print(f"Battery Voltage: {battery_voltage} V")
-    print(f"Battery Charge: {battery_percentage} %")
+    print(f"{BLUE}Battery Voltage: {battery_voltage} V{RESET}")
+    print(f"{CYAN}Battery Charge: {battery_percentage} %{RESET}")
     return battery_voltage, battery_percentage
 
 # Function to measure load output
@@ -54,23 +61,11 @@ def get_load_output():
     load_voltage = ina219.voltage()
     load_current = ina219.current()
     load_power = load_voltage * (load_current / 1000)  # in Watts
-    print(f"Load Voltage: {load_voltage} V")
-    print(f"Load Current: {load_current} mA")
-    print(f"Load Power: {load_power} W")
+    print(f"{BLUE}Load Voltage: {load_voltage} V{RESET}")
+    print(f"{CYAN}Load Current: {load_current} mA{RESET}")
+    print(f"{PURPLE}Load Power: {load_power} W{RESET}")
     return load_voltage, load_current, load_power
 
 # Main monitoring loop
 while True:
-    print("\n--- Power System Status ---")
-    
-    # Get solar input
-    solar_voltage, solar_current = get_solar_input()
-    
-    # Get battery status from PiJuice
-    battery_voltage, battery_charge = get_battery_charge()
-    
-    # Get load output
-    load_voltage, load_current, load_power = get_load_output()
-    
-    # Sleep for 5 seconds before checking again
-    time.sleep(5)
+    print(f"\n{BOLD}{PURPLE}--- Power System Status ---{RESET
