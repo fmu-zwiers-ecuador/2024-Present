@@ -1,76 +1,30 @@
 import time
 import board
-import busio
-from adafruit_ina219 import INA219
-from pijuice import PiJuice
+import adafruit_ina260
+from adafruit_lc709203f import LC709203F
 
-# Initialize I2C bus
-i2c = busio.I2C(board.SCL, board.SDA)
+print("simple test")
+print("Make sure LiPoly battery is plugged into the board!")
 
-# Initialize INA219 current sensor
-ina219 = INA219(i2c)
+i2c = board.I2C()  # uses board.SCL and board.SDA
+ina260 = adafruit_ina260.INA260(i2c)
+sensor = LC709203F(i2c)
 
-# Initialize PiJuice
-pijuice = PiJuice(1, 0x14)  # I2C address of PiJuice
 
-# Setup INA219 for correct scaling
-ina219.configure()
-
-# Function to check if solar power is present and read input voltage/current
-def get_solar_input():
-    status = pijuice.status.GetStatus()
-    io_voltage = pijuice.status.GetIoVoltage()
-    io_current = pijuice.status.GetIoCurrent()
-
-    if io_voltage["error"] or io_current["error"]:
-        print("Error reading solar input!")
-        return None, None
-    
-    solar_voltage = io_voltage["data"] / 1000.0  # Convert mV to V
-    solar_current = io_current["data"]  # Already in mA
-
-    print(f"Solar Voltage (Input Voltage): {solar_voltage} V")
-    print(f"Solar Current (Input Current): {solar_current} mA")
-
-    return solar_voltage, solar_current
-
-# Function to get battery charge status from PiJuice
-def get_battery_charge():
-    battery_status = pijuice.status.GetChargeLevel()
-    battery_voltage = pijuice.status.GetBatteryVoltage()
-
-    if battery_status["error"] or battery_voltage["error"]:
-        print("Error reading battery status!")
-        return None, None
-    
-    battery_percentage = battery_status["data"]
-    battery_voltage = battery_voltage["data"] / 1000.0  # Convert mV to V
-    print(f"Battery Voltage: {battery_voltage} V")
-    print(f"Battery Charge: {battery_percentage} %")
-    return battery_voltage, battery_percentage
-
-# Function to measure load output
-def get_load_output():
-    load_voltage = ina219.voltage()
-    load_current = ina219.current()
-    load_power = load_voltage * (load_current / 1000)  # in Watts
-    print(f"Load Voltage: {load_voltage} V")
-    print(f"Load Current: {load_current} mA")
-    print(f"Load Power: {load_power} W")
-    return load_voltage, load_current, load_power
-
-# Main monitoring loop
 while True:
-    print("\n--- Power System Status ---")
-    
-    # Get solar input
-    solar_voltage, solar_current = get_solar_input()
-    
-    # Get battery status from PiJuice
-    battery_voltage, battery_charge = get_battery_charge()
-    
-    # Get load output
-    load_voltage, load_current, load_power = get_load_output()
-    
-    # Sleep for 5 seconds before checking again
-    time.sleep(5)
+	try:
+		print("Current: %.2f mA Voltage: %.2f V Power:%.2f mW"
+        		% (ina260.current, ina260.voltage, ina260.power))
+		print("Battery: %0.3f Volts / %0.1f %%"
+            		% (sensor.cell_voltage, sensor.cell_percent))
+
+	except OSError:
+		print("retry reads")
+
+	time.sleep(1)
+
+
+
+
+
+##### Slow baud rate to 10k on rasp pi zero for LC709203F #####
